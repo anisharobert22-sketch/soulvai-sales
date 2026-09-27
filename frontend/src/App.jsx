@@ -7,6 +7,7 @@ import LoginPage from "./pages/LoginPage.jsx";
 import CapturePage from "./pages/CapturePage.jsx";
 import BoardPage from "./pages/BoardPage.jsx";
 import InboxPage from "./pages/InboxPage.jsx";
+import TeamPage from "./pages/TeamPage.jsx";
 
 function RequireAuth({ children }) {
   const { session } = useAuth();
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="/capture" element={<RequireAuth><CapturePage /></RequireAuth>} />
           <Route path="/board" element={<RequireAuth><BoardPage /></RequireAuth>} />
           <Route path="/inbox" element={<RequireAuth><InboxPage /></RequireAuth>} />
+          <Route path="/team" element={<RequireAuth><TeamPage /></RequireAuth>} />
           <Route path="*" element={<Navigate to="/capture" replace />} />
         </Routes>
       </BrowserRouter>
