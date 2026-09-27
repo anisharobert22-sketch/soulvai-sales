@@ -1,10 +1,6 @@
 {
-  "redirects": [
-    { "source": "/", "destination": "/sales", "permanent": false }
-  ],
   "rewrites": [
-    { "source": "/sales/assets/:path*", "destination": "/assets/:path*" },
-    { "source": "/sales/:path*", "destination": "/index.html" },
-    { "source": "/sales", "destination": "/index.html" }
+    { "source": "/sales", "destination": "https://soulvai-sales.vercel.app/sales" },
+    { "source": "/sales/:path*", "destination": "https://soulvai-sales.vercel.app/sales/:path*" }
   ]
 }
