@@ -74,13 +74,11 @@ export default function TeamPage() {
                 {u.role}
               </div>
 
-              {u.role === "cce" && (
-                <div style={{ ...TYPE.body, fontSize: "11.5px", color: u.available ? COLORS.ledgerGreen : COLORS.inkSoft, minWidth: "70px" }}>
-                  {u.available ? "Available" : "Away"}
-                </div>
-              )}
+              <div style={{ ...TYPE.body, fontSize: "11.5px", color: u.available ? COLORS.ledgerGreen : COLORS.inkSoft, minWidth: "70px" }}>
+                {u.role === "cce" ? (u.available ? "Available" : "Away") : ""}
+              </div>
 
-              <div style={{ display: "flex", gap: SPACE.xs, flexShrink: 0 }}>
+              <div style={{ display: "flex", gap: SPACE.xs, flexShrink: 0, width: "300px", justifyContent: "flex-end" }}>
                 <SecondaryButton onClick={() => setEditing(u)} style={{ padding: "6px 10px", fontSize: "12px", minHeight: "auto" }}>
                   Edit
                 </SecondaryButton>
@@ -88,13 +86,13 @@ export default function TeamPage() {
                   Reset password
                 </SecondaryButton>
                 {u.id === user.id ? (
-                  <span style={{ ...TYPE.body, fontSize: "11.5px", color: COLORS.inkSoft, alignSelf: "center" }}>You</span>
+                  <span style={{ ...TYPE.body, fontSize: "11.5px", color: COLORS.inkSoft, alignSelf: "center", width: "84px", textAlign: "center" }}>You</span>
                 ) : u.active ? (
-                  <DangerButton onClick={() => toggleActive(u)} style={{ padding: "6px 10px", fontSize: "12px", minHeight: "auto" }}>
+                  <DangerButton onClick={() => toggleActive(u)} style={{ padding: "6px 10px", fontSize: "12px", minHeight: "auto", width: "84px" }}>
                     Deactivate
                   </DangerButton>
                 ) : (
-                  <PrimaryButton onClick={() => toggleActive(u)} style={{ padding: "6px 10px", fontSize: "12px", minHeight: "auto" }}>
+                  <PrimaryButton onClick={() => toggleActive(u)} style={{ padding: "6px 10px", fontSize: "12px", minHeight: "auto", width: "84px" }}>
                     Reactivate
                   </PrimaryButton>
                 )}
