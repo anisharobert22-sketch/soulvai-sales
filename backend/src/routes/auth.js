@@ -31,8 +31,30 @@ router.post("/login", async (req, res) => {
   res.json({
     token,
     user: { id: user.id, name: user.name, phone: user.phone, role: user.role, language: user.language, available: user.available },
-    organization: org && { id: org.id, display_name: org.display_name, type: org.type, logo_url: org.logo_url, primary_color: org.primary_color, default_language: org.default_language },
+    organization: org && { id: org.id, display_name: org.display_name, type: org.type, logo_url: org.logo_url, primary_color: org.primary_color, default_language: org.default_language, product_list: org.product_list },
   });
+});
+
+// Lets an admin edit the product list their own CCEs/salespeople pick
+// from on the capture form (see ProductChips.jsx). Org-scoped by
+// req.user.org_id, same as every other admin-only write here - there's
+// no cross-org edit path.
+router.patch("/organization", requireAuth, requireRole("admin"), async (req, res) => {
+  const { product_list } = req.body || {};
+  if (!Array.isArray(product_list) || product_list.some((p) => typeof p !== "string")) {
+    return res.status(400).json({ error: "product_list must be an array of strings" });
+  }
+  const cleaned = product_list.map((p) => p.trim()).filter(Boolean);
+  if (cleaned.length === 0) {
+    return res.status(400).json({ error: "product_list can't be empty" });
+  }
+
+  const { rows } = await query(
+    `UPDATE organizations SET product_list = $1 WHERE id = $2
+     RETURNING id, display_name, type, logo_url, primary_color, default_language, product_list`,
+    [cleaned, req.user.org_id]
+  );
+  res.json(rows[0]);
 });
 
 // No public signup: field staff are provisioned by an org admin. An

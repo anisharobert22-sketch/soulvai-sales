@@ -1,15 +1,19 @@
 import { useState } from "react";
 import { COLORS, TYPE, SPACE } from "../constants/theme.js";
+import { useAuth } from "../lib/AuthContext.jsx";
 
-// v1's fixed starter list - not yet configurable per org. Flagging this
-// as a real gap rather than quietly hardcoding it forever: a vendor
-// reselling their own hardware will want their own product list here,
-// not Accura's.
-const DEFAULT_PRODUCTS = ["Accura Lite", "Accura Pro", "POS Terminal", "GST Filing Add-on", "Tally Migration"];
+// Fallback only for a cached session from before organizations.product_list
+// existed (see migration 003) - normal operation always has a real list
+// from the org. Each org now edits its own list from the Team page, so a
+// vendor reselling their own hardware sees their own products here, not
+// SoulvAI/Accura's.
+const FALLBACK_PRODUCTS = ["Accura Lite", "Accura Pro", "POS Terminal", "GST Filing Add-on", "Tally Migration"];
 
 export default function ProductChips({ selected, onChange }) {
+  const { organization } = useAuth();
   const [customInput, setCustomInput] = useState("");
-  const allOptions = Array.from(new Set([...DEFAULT_PRODUCTS, ...selected]));
+  const orgProducts = organization?.product_list?.length ? organization.product_list : FALLBACK_PRODUCTS;
+  const allOptions = Array.from(new Set([...orgProducts, ...selected]));
 
   function toggle(product) {
     if (selected.includes(product)) onChange(selected.filter((p) => p !== product));

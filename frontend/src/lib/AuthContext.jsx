@@ -57,8 +57,20 @@ export function AuthProvider({ children }) {
     });
   }, []);
 
+  // Applied after an admin edits the product list so the change shows up
+  // immediately, without forcing a logout/login just to refresh the
+  // cached session's organization data.
+  const updateOrganization = useCallback((patch) => {
+    setSession((prev) => {
+      if (!prev) return prev;
+      const next = { ...prev, organization: { ...prev.organization, ...patch } };
+      localStorage.setItem("ss_session", JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ session, user: session?.user, organization: session?.organization, login, logout, updateAvailable }}>
+    <AuthContext.Provider value={{ session, user: session?.user, organization: session?.organization, login, logout, updateAvailable, updateOrganization }}>
       {children}
     </AuthContext.Provider>
   );

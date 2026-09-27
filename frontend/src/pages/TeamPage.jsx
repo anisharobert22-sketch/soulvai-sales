@@ -102,6 +102,8 @@ export default function TeamPage() {
         )}
       </Card>
 
+      <ProductListCard />
+
       {showAdd && <AddAgentModal onClose={() => setShowAdd(false)} onSaved={() => { setShowAdd(false); refresh(); }} />}
       {editing && (
         <EditAgentModal
@@ -113,6 +115,108 @@ export default function TeamPage() {
       )}
       {resetting && <ResetPasswordModal agent={resetting} onClose={() => setResetting(null)} onSaved={() => setResetting(null)} />}
     </div>
+  );
+}
+
+// Every org sees its own product list on the capture form's chips
+// (ProductChips.jsx) - this is where an admin edits it. Lives on the
+// Team page rather than a separate Settings page since it's the only
+// other org-level admin setting v1 has.
+function ProductListCard() {
+  const { organization, updateOrganization } = useAuth();
+  const [products, setProducts] = useState(organization?.product_list || []);
+  const [newProduct, setNewProduct] = useState("");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setProducts(organization?.product_list || []);
+  }, [organization?.product_list]);
+
+  function addProduct() {
+    const trimmed = newProduct.trim();
+    if (!trimmed || products.includes(trimmed)) { setNewProduct(""); return; }
+    setProducts([...products, trimmed]);
+    setNewProduct("");
+    setSaved(false);
+  }
+
+  function removeProduct(p) {
+    setProducts(products.filter((x) => x !== p));
+    setSaved(false);
+  }
+
+  async function save() {
+    setSaving(true);
+    setError("");
+    setSaved(false);
+    try {
+      const updated = await api.updateOrgProductList(products);
+      updateOrganization({ product_list: updated.product_list });
+      setSaved(true);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Card style={{ padding: SPACE.lg, marginTop: SPACE.md }}>
+      <h2 style={{ ...TYPE.title, fontSize: "16px", marginBottom: SPACE.xs }}>Products</h2>
+      <div style={{ ...TYPE.body, fontSize: "12.5px", color: COLORS.inkSoft, marginBottom: SPACE.md }}>
+        What shows up as product chips on the capture form for this org.
+      </div>
+
+      <div style={{ display: "flex", flexWrap: "wrap", gap: SPACE.xs, marginBottom: SPACE.md }}>
+        {products.map((p) => (
+          <span
+            key={p}
+            style={{
+              ...TYPE.body,
+              fontSize: "13px",
+              padding: "6px 8px 6px 12px",
+              borderRadius: "999px",
+              border: `1.5px solid ${COLORS.border}`,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+            }}
+          >
+            {p}
+            <button
+              onClick={() => removeProduct(p)}
+              aria-label={`Remove ${p}`}
+              style={{ border: "none", background: "none", cursor: "pointer", color: COLORS.inkSoft, fontSize: "14px", lineHeight: 1, padding: 0 }}
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        {products.length === 0 && <div style={{ ...TYPE.body, color: COLORS.inkSoft, fontSize: "12.5px" }}>No products yet - add at least one below.</div>}
+      </div>
+
+      <div style={{ display: "flex", gap: SPACE.xs, marginBottom: SPACE.md }}>
+        <input
+          value={newProduct}
+          onChange={(e) => setNewProduct(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addProduct())}
+          placeholder="Add a product..."
+          style={{ ...TYPE.body, flex: 1, padding: "8px 10px", borderRadius: "6px", border: `1.5px solid ${COLORS.border}`, background: COLORS.cardBg }}
+        />
+        <SecondaryButton onClick={addProduct} style={{ padding: "8px 14px", fontSize: "13px", minHeight: "auto" }}>Add product</SecondaryButton>
+      </div>
+
+      {error && <div style={{ ...TYPE.body, color: COLORS.correction, marginBottom: SPACE.sm }}>{error}</div>}
+
+      <div style={{ display: "flex", alignItems: "center", gap: SPACE.sm }}>
+        <PrimaryButton onClick={save} disabled={saving} style={{ padding: "8px 16px", fontSize: "13px", minHeight: "auto" }}>
+          {saving ? "Saving…" : "Save products"}
+        </PrimaryButton>
+        {saved && <span style={{ ...TYPE.body, fontSize: "12.5px", color: COLORS.ledgerGreen }}>Saved.</span>}
+      </div>
+    </Card>
   );
 }
 

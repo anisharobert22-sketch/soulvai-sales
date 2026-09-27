@@ -36,6 +36,7 @@ export const api = {
   updateUser: (id, payload) => request(`/auth/users/${id}`, { method: "PATCH", body: payload }),
   resetUserPassword: (id, password) => request(`/auth/users/${id}/reset-password`, { method: "POST", body: { password } }),
   setAvailable: (available) => request("/auth/users/me/available", { method: "PATCH", body: { available } }),
+  updateOrgProductList: (product_list) => request("/auth/organization", { method: "PATCH", body: { product_list } }),
 
   searchContacts: (q) => request(`/contacts${q ? `?q=${encodeURIComponent(q)}` : ""}`),
   createContact: (payload) => request("/contacts", { method: "POST", body: payload }),
