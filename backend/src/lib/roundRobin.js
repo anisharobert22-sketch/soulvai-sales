@@ -9,7 +9,7 @@ const { query } = require("../db/queries");
  */
 async function assignRoundRobin(orgId, role) {
   const { rows: candidates } = await query(
-    "SELECT id FROM users WHERE org_id = $1 AND role = $2 AND available = true ORDER BY id",
+    "SELECT id FROM users WHERE org_id = $1 AND role = $2 AND available = true AND active = true ORDER BY id",
     [orgId, role]
   );
   if (candidates.length === 0) return null;

@@ -33,6 +33,8 @@ export const api = {
   login: (phone, password) => request("/auth/login", { method: "POST", body: { phone, password } }),
   listUsers: () => request("/auth/users"),
   createUser: (payload) => request("/auth/users", { method: "POST", body: payload }),
+  updateUser: (id, payload) => request(`/auth/users/${id}`, { method: "PATCH", body: payload }),
+  resetUserPassword: (id, password) => request(`/auth/users/${id}/reset-password`, { method: "POST", body: { password } }),
   setAvailable: (available) => request("/auth/users/me/available", { method: "PATCH", body: { available } }),
 
   searchContacts: (q) => request(`/contacts${q ? `?q=${encodeURIComponent(q)}` : ""}`),

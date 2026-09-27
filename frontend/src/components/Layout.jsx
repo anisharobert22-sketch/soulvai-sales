@@ -12,6 +12,10 @@ const NAV_ITEMS = [
   { to: "/inbox", label: "Inbox", icon: "📥" },
 ];
 
+const ADMIN_NAV_ITEMS = [
+  { to: "/team", label: "Team", icon: "👥" },
+];
+
 export default function Layout({ children }) {
   const { user, organization, logout, updateAvailable } = useAuth();
   const { isPhone } = useViewportTier();
@@ -56,6 +60,11 @@ export default function Layout({ children }) {
               <NavLink key={item.to} to={item.to} style={({ isActive }) => navStyle(isActive)}>
                 <span>{item.icon}</span> {item.label}
                 {item.to === "/inbox" && unread > 0 && <Badge count={unread} />}
+              </NavLink>
+            ))}
+            {user?.role === "admin" && ADMIN_NAV_ITEMS.map((item) => (
+              <NavLink key={item.to} to={item.to} style={({ isActive }) => navStyle(isActive)}>
+                <span>{item.icon}</span> {item.label}
               </NavLink>
             ))}
           </nav>

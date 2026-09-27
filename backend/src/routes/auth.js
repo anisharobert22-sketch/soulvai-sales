@@ -16,6 +16,13 @@ router.post("/login", async (req, res) => {
   if (!user || !(await checkPassword(password, user.password_hash))) {
     return res.status(401).json({ error: "Invalid phone or password" });
   }
+  // A deactivated agent (left the team) keeps their historical records but
+  // can't log back in - same 401 as a wrong password, deliberately, so a
+  // deactivated phone number doesn't reveal "this account exists" to
+  // whoever's trying it.
+  if (!user.active) {
+    return res.status(401).json({ error: "Invalid phone or password" });
+  }
 
   const { rows: orgRows } = await query("SELECT * FROM organizations WHERE id = $1", [user.org_id]);
   const org = orgRows[0];
@@ -56,10 +63,69 @@ router.post("/users", requireAuth, requireRole("admin"), async (req, res) => {
 
 router.get("/users", requireAuth, async (req, res) => {
   const { rows } = await query(
-    "SELECT id, name, phone, role, language, available FROM users WHERE org_id = $1 ORDER BY name",
+    "SELECT id, name, phone, role, language, available, active, created_at FROM users WHERE org_id = $1 ORDER BY name",
     [req.user.org_id]
   );
   res.json(rows);
+});
+
+// Team admin page: edit an agent's name/role/language, or deactivate/
+// reactivate them. Deliberately not a DELETE - every other table
+// (pipeline_cards.assigned_to, field_captures.created_by, etc.) references
+// this row, so removing it would either cascade-delete real business
+// history or fail on the foreign key. "active = false" is the only safe
+// way to remove someone's access.
+router.patch("/users/:id", requireAuth, requireRole("admin"), async (req, res) => {
+  const { name, role, language, active } = req.body || {};
+  if (role && !["salesperson", "cce", "admin"].includes(role)) {
+    return res.status(400).json({ error: "role must be salesperson, cce, or admin" });
+  }
+  // An admin deactivating their own only-remaining admin account would
+  // lock the org out of user management entirely (there'd be no admin
+  // left to reactivate anyone, including themselves). Block it outright
+  // rather than relying on the admin to notice - this is exactly the kind
+  // of click a busy person makes by accident on a list sorted by name.
+  if (active === false && req.params.id === req.user.sub) {
+    return res.status(400).json({ error: "You can't deactivate your own account" });
+  }
+  // Same reasoning as the deactivation guard above: an admin changing
+  // their own role away from admin (even by an accidental click on a
+  // list sorted by name) would leave the org with no admin able to undo
+  // it or manage anyone else.
+  if (role && role !== "admin" && req.params.id === req.user.sub) {
+    return res.status(400).json({ error: "You can't change your own role" });
+  }
+
+  const { rows: existingRows } = await query("SELECT id FROM users WHERE id = $1 AND org_id = $2", [req.params.id, req.user.org_id]);
+  if (!existingRows.length) return res.status(404).json({ error: "Not found" });
+
+  // A deactivated agent shouldn't stay "available" for round robin to keep
+  // considering, so turning active off also turns available off.
+  const { rows } = await query(
+    `UPDATE users SET
+       name = COALESCE($1, name),
+       role = COALESCE($2, role),
+       language = COALESCE($3, language),
+       active = COALESCE($4::boolean, active),
+       available = CASE WHEN $4::boolean = false THEN false ELSE available END
+     WHERE id = $5 AND org_id = $6
+     RETURNING id, name, phone, role, language, available, active`,
+    [name, role, language, active, req.params.id, req.user.org_id]
+  );
+  res.json(rows[0]);
+});
+
+router.post("/users/:id/reset-password", requireAuth, requireRole("admin"), async (req, res) => {
+  const { password } = req.body || {};
+  if (!password || password.length < 6) {
+    return res.status(400).json({ error: "password must be at least 6 characters" });
+  }
+  const { rows: existingRows } = await query("SELECT id FROM users WHERE id = $1 AND org_id = $2", [req.params.id, req.user.org_id]);
+  if (!existingRows.length) return res.status(404).json({ error: "Not found" });
+
+  const password_hash = await hashPassword(password);
+  await query("UPDATE users SET password_hash = $1 WHERE id = $2", [password_hash, req.params.id]);
+  res.json({ ok: true });
 });
 
 // A CCE's own availability toggle for the round-robin assigner.
