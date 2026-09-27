@@ -1,0 +1,44 @@
+:root {
+  --color-parchment: #F2E9D8;
+  --color-parchmentDeep: #E8DCC3;
+  --color-ink: #2A241C;
+  --color-inkSoft: #6B6255;
+  --color-ledgerGreen: #1F5D46;
+  --color-ledgerGreenDeep: #163F31;
+  --color-brass: #9C7A44;
+  --color-correction: #A13A2F;
+  --color-amber: #C08A2C;
+  --color-border: #D9CBA8;
+  --color-cardBg: #FBF7EE;
+  --color-textOnAccent: #FAF6EC;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  max-width: 100vw;
+}
+
+html, body {
+  overflow-x: hidden;
+}
+
+body {
+  background: var(--color-parchment);
+  color: var(--color-ink);
+  font-family: 'Inter', -apple-system, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, input, textarea, select {
+  font-family: inherit;
+}
+
+button {
+  -webkit-user-select: none;
+  user-select: none;
+}
