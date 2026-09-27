@@ -25,7 +25,7 @@ function RequireAuth({ children }) {
 export default function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter basename="/sales">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/capture" element={<RequireAuth><CapturePage /></RequireAuth>} />

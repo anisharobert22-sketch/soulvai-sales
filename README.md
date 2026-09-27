@@ -93,5 +93,32 @@ npm start   # runs migrations, then listens on PORT (default 4100)
 cd frontend
 cp .env.example .env   # point VITE_API_BASE at the backend above
 npm install
-npm run dev             # http://localhost:5173
+npm run dev             # http://localhost:5173/sales/
 ```
+
+## Deployment: app.soulvai.ai/sales
+
+This app is served under a path on Accura's own domain, not its own
+subdomain - Accura owns app.soulvai.ai, so Sales lives at
+`app.soulvai.ai/sales` via a Vercel rewrite on Accura's project, while
+staying a fully separate deployed service (own Railway backend, own
+Vercel frontend) exactly as the build plan called for. Nothing about
+the two apps' code or data mixes; only the URL is shared.
+
+This is why `vite.config.js` sets `base: '/sales/'` and `App.jsx`'s
+router uses `basename="/sales"` - every asset URL and client-side route
+needs to already know it lives under that path, whether it's reached
+through Accura's proxy or directly on this app's own Vercel domain
+(`frontend/vercel.json` handles the direct-access case with its own
+`/sales` redirect + rewrites, so both paths behave identically).
+
+Steps:
+1. Deploy `backend/` to Railway (own Postgres plugin in the same
+   project - keep this app's data separate from Accura's/Verdikt's).
+   `npm start` runs migrations automatically.
+2. Deploy `frontend/` to Vercel, with `VITE_API_BASE` set to the
+   Railway backend's URL.
+3. On **Accura's own Vercel project**, add a `vercel.json` (or a rule
+   to its existing one) rewriting `/sales` and `/sales/:path*` to this
+   frontend's Vercel URL - see Accura's own repo for that change once
+   step 2's URL is known.

@@ -1,0 +1,10 @@
+{
+  "redirects": [
+    { "source": "/", "destination": "/sales", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/sales/assets/:path*", "destination": "/assets/:path*" },
+    { "source": "/sales/:path*", "destination": "/index.html" },
+    { "source": "/sales", "destination": "/index.html" }
+  ]
+}
